@@ -12,23 +12,32 @@ var mdaut = require('../middlewares/autenticacion');
 
 app.get('/', (req, res, next) => {
 
-    Usuario.find({}, 'role img email nombre id').exec((err, usuarios) => {
+    var desde = req.query.desde || 0;
+    desde = Number(desde);
 
-        if (err) {
-            return res.status(500).json({
-                ok: false,
-                mensaje: "¡Error al traer usuarios!",
-                errors: err
-            });
-        }
+    Usuario.find({}, 'role img email nombre id')
+        .skip(desde)
+        .limit(5)
+        .exec((err, usuarios) => {
 
-        res.status(200).json({
-            ok: true,
-            usuarios: usuarios
-        });
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    mensaje: "¡Error al traer usuarios!",
+                    errors: err
+                });
+            }
+            Usuario.count({}, (err, cont) => {
+
+                res.status(200).json({
+                    total: cont,
+                    ok: true,
+                    usuarios: usuarios
+                });
+            })
 
 
-    })
+        })
 
 });
 
@@ -137,7 +146,7 @@ app.delete('/:id', mdaut.verificarToken, (req, res) => {
                 .status(500)
                 .json({
                     ok: false,
-                    mensaje: "¡Error al elminar usuario!",
+                    mensaje: "¡Error al eliminar usuario!",
                     errors: err
                 });
         }
